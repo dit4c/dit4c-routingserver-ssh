@@ -2,7 +2,7 @@
 
 set -e
 
-read UNIXSOCK
+UNIXSOCK=$SSH_ORIGINAL_COMMAND
 if [[ -S "$UNIXSOCK" ]]; then
 	sudo -u nginx /dev/shm/bin/create-upstream $REMOTE_USER $UNIXSOCK
 else

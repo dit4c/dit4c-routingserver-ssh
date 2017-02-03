@@ -55,7 +55,6 @@ ${TARGET_IMAGE}: ${ACBUILD} ${NGINX_ACI} ${CONFD} ${ETC_FILES} install.sh start.
 	sudo ${ACBUILD} --debug copy ${CONFD} /usr/local/bin/confd
 	sudo ${ACBUILD} --debug copy-to-dir install.sh start.sh /
 	sudo ${ACBUILD} --debug copy-to-dir etc/* /etc
-	sudo ${ACBUILD} --debug copy-to-dir usr/local/bin/* /usr/local/bin
 	sudo sh -c 'PATH=${shell echo $$PATH}:${BUILD_DIR} ${ACBUILD} --debug run --engine chroot -- sh -c "./install.sh && rm -f install.sh"'
 	sudo ${ACBUILD} --debug set-exec -- /start.sh
 	sudo ${ACBUILD} --debug set-name ${NAME}

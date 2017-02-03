@@ -29,7 +29,7 @@ AllowUsers listen register
 Match User listen
 AuthorizedKeysCommand /dev/shm/bin/listen-authorized-keys %k
 AllowStreamLocalForwarding remote
-ForceCommand /usr/local/bin/listen-login
+ForceCommand /dev/shm/bin/listen-login
 
 Match User register
 AuthorizedKeysCommand /bin/echo %t %k

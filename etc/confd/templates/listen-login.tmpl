@@ -9,6 +9,9 @@ else
 	exit 1
 fi
 
+URI={{getv "/routing/scheme"}}://${REMOTE_USER}.{{getv "/routing/domain"}}
+echo $URI
+
 while true
 do
 	sleep 60

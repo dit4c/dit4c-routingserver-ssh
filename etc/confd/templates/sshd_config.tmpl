@@ -1,0 +1,72 @@
+#	$OpenBSD: sshd_config,v 1.98 2016/02/17 05:29:04 djm Exp $
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+
+# This sshd was compiled with PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+Port 22
+#AddressFamily any
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+# The default requires explicit activation of protocol 1
+Protocol 2
+
+# HostKeys for protocol version 2
+HostKey {{getv "/ssh/keydir"}}/ssh_host_rsa_key
+
+# Logging
+LogLevel INFO
+
+# Authentication:
+PermitRootLogin no
+StrictModes yes
+
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+
+# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
+# but this is overridden so installations will only check .ssh/authorized_keys
+AuthorizedKeysFile	none
+
+AuthorizedPrincipalsCommandUser nobody
+AuthorizedKeysCommandUser nobody
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM no
+
+PermitUserEnvironment yes
+AllowAgentForwarding no
+AllowStreamLocalForwarding no
+AllowTcpForwarding no
+PermitTTY no
+X11Forwarding no
+
+StreamLocalBindUnlink yes
+StreamLocalBindMask 0111
+
+AllowUsers listen register
+
+Match User listen
+AuthorizedKeysCommand /dev/shm/bin/listen-authorized-keys %k
+AllowStreamLocalForwarding remote
+ForceCommand /usr/local/bin/listen-login
+
+Match User register
+AuthorizedKeysCommand /bin/echo %t %k
+ForceCommand /dev/shm/bin/register-login

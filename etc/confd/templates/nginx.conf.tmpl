@@ -1,0 +1,67 @@
+user  nginx;
+worker_processes  1;
+error_log stderr info;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /dev/stdout  main;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    map $http_upgrade $connection_upgrade {
+      default upgrade;
+      ''      close;
+    }
+
+    server {
+{{if and ( exists "/tls/cert" ) (exists "/tls/key") }}
+      listen 443 ssl http2 default_server;
+      ssl_certificate     {{getv "/tls/cert"}};
+      ssl_certificate_key {{getv "/tls/key"}};
+{{else}}
+      listen 80 default_server;
+{{end}}
+      server_name
+
+      location / {
+        return 404;
+      }
+    }
+
+    server {
+{{if and ( exists "/tls/cert" ) (exists "/tls/key") }}
+      listen 443 ssl http2;
+      ssl_certificate     {{getv "/tls/cert"}};
+      ssl_certificate_key {{getv "/tls/key"}};
+{{else}}
+      listen 80;
+{{end}}
+      server_name ~^(?<user>.+?)\.{{getv "/routing/domain"}}$;
+      client_max_body_size  100G;
+
+      location / {
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_pass_request_headers off;
+        proxy_pass http://unix:/dev/shm/upstreams/$user;
+        proxy_http_version 1.1;
+        proxy_read_timeout 1d; # Allow websockets to idle
+        proxy_set_header Host $http_host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header X-Forwarded-Proto "{{getv "/routing/scheme"}}";
+        proxy_set_header X-Forwarded-Host $http_host;
+      }
+    }
+}

@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -e
+
+KEY_SERVER="{{getv "/pgp/baseurl"}}"
+
+# Ensure output dir exists
+OUTPUT_DIR="{{getv "/pgp/cachedir"}}"
+mkdir -p "$OUTPUT_DIR"
+# Ensure output directory is global-readable
+chmod 0755 "$OUTPUT_DIR"
+# Create all files as global-readable
+umask 022
+
+read REMOTE_USER
+mkdir -p /tmp/keyrings
+TMP_FILE=$(mktemp -p /tmp/keyrings)
+GPG="gpg2 --no-default-keyring --keyring $TMP_FILE"
+# Get remote PGP keys and import
+PRIMARY_KEY_ID=$(
+# Get remote key
+curl -H 'Accept: application/pgp-keys' -sL $KEY_SERVER/$REMOTE_USER |
+# Import to temporary keyring
+$GPG --import 2>&1 |
+#
+sed -ne '1s/^.*key \(.*\):.*$/\1/p'
+)
+AUTH_KEYS=$(
+$GPG --with-colons --list-keys $PRIMARY_KEY_ID |
+# Get valid primary/sub keys
+sed -ne '/^[ps]ub:[-qnmfu]/p' |
+# Select key id & capabilities columns
+cut -d: -f5,12 |
+# Filter for keys that have authentication capability
+sed -ne '/:.*a.*$/p' |
+# Extract key id
+cut -d: -f1
+)
+for KEY_ID in $AUTH_KEYS
+do
+	AUTH_KEYS_LINE=$($GPG --export-ssh-key $KEY_ID\!)
+	KEY=$(echo $AUTH_KEYS_LINE | awk '{print $2}')
+	DIGEST=$(echo -n $KEY | base64 -d | sha512sum | awk '{print $1}')
+	echo 'environment="REMOTE_USER='$REMOTE_USER'"' $AUTH_KEYS_LINE > $OUTPUT_DIR/$DIGEST
+done

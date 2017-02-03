@@ -1,0 +1,12 @@
+[template]
+src = "nginx.conf.tmpl"
+dest = "/dev/shm/nginx.conf"
+uid = 0
+gid = 0
+mode = "0644"
+keys = [
+  "/routing/scheme"
+  "/routing/domain",
+  "/tls/cert",
+  "/tls/key",
+]

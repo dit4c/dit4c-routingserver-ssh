@@ -1,0 +1,3 @@
+root ALL=(ALL) ALL
+
+listener    ALL=(nginx) NOPASSWD: NOSETENV: /dev/shm/bin/create-upstream

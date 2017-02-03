@@ -69,11 +69,13 @@ ${TARGET_IMAGE}: ${ACBUILD} ${NGINX_ACI} ${CONFD} ${ETC_FILES} install.sh start.
 	sudo chown $(shell id -u):$(shell id -g) $@
 
 ${TARGET_IMAGE}.asc: ${TARGET_IMAGE} signing.key
-	$(eval TMP_KEYRING := $(shell mktemp -p ${BUILD_DIR}))
-	$(eval GPG_FLAGS := --batch --no-default-keyring --keyring $(TMP_KEYRING) )
+	$(eval TMP_PUBLIC_KEYRING := $(shell mktemp -p ./build))
+	$(eval TMP_SECRET_KEYRING := $(shell mktemp -p ./build))
+	$(eval GPG_FLAGS := --batch --no-default-keyring --keyring $(TMP_PUBLIC_KEYRING) --secret-keyring $(TMP_SECRET_KEYRING) )
 	$(GPG) $(GPG_FLAGS) --import signing.key
+	rm -f $@
 	$(GPG) $(GPG_FLAGS) --armour --detach-sign $<
-	rm $(TMP_KEYRING)
+	rm $(TMP_PUBLIC_KEYRING) $(TMP_SECRET_KEYRING)
 
 all: ${TARGET_IMAGE}
 

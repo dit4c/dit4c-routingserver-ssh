@@ -1,0 +1,19 @@
+sudo: required
+dist: trusty
+language: generic
+script: make
+before_deploy:
+- openssl aes-256-cbc -K $encrypted_8b955380720c_key -iv $encrypted_8b955380720c_iv
+  -in signing.key.enc -out signing.key -d
+- make deploy
+deploy:
+  provider: releases
+  api_key:
+    secure: NpJuHfCAfgO49gNd2RcxrR9gTabNe8CjVbnG6HwPTFKC+tIuIPlmeqJU6EJjdkkEkDdlqoaRzMIsLatx24dJQnFq55aMOfikZRPkSf1Nml1yb1Q4UPsJBAFvbJeWodL6197uLbZ763iaG1f2pQmpPMHkkg0qjtFkp2M9xLWHuDchmA+dmxVBi8oGz8QLVMpo3/TcULqmzyjtM9sa6Z2PRqlHFq2MTXBTj13FSh6ynfd6irDJcD8jmrBPVv0o49NJWPLWLT3gLq2tknGBUwt4uSIo4LjbckFK3FvLAbd9uxCkNLLuZjLICOodNM/uc35MoOQeSv/Q4LJZ2SI2O7+uTaoD096tQ864VhmGAWQDVk65+Xkt7UL4QcIjZAQRzaM9TEnIrJuk0tbb50zCM59O3qfYQOC2UiJ5OlmN0qQOsjH+tOwMGFIKZSbQKfjkjGo6Qsy2n8002R3MwwnD9fEnySAmDPVH0ZUlfWolYy3aUJQrOrboXg/CmnRg+Nj4NTvSThB4q7xBQRwvhJvN5wcodfaOeYTn5UALunwKIl4bwvQRF6I7ojkOx63+iAkuZs9ZQqGtv+JPidppLKzFcvfYGjBNYXMyC4fpTsiGRLEh1IhdM4XMmT6ixrjfAHkhYxLfFfyMF6lun8o8icOpc4lSUeRvQggrDHanOovsUqBS4pU=
+  file:
+    - dist/dit4c-routingserver-ssh.linux.amd64.aci
+    - dist/dit4c-routingserver-ssh.linux.amd64.aci.asc
+  on:
+    tags: true
+    repo: dit4c/dit4c-routingserver-ssh
+  skip_cleanup: true

@@ -5,8 +5,8 @@ uid = 0
 gid = 0
 mode = "0644"
 keys = [
-  "/routing/scheme"
+  "/routing/scheme",
   "/routing/domain",
   "/tls/cert",
-  "/tls/key",
+  "/tls/key"
 ]

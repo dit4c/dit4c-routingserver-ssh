@@ -2,7 +2,7 @@
 
 set -e
 
-KEY_SERVER="{{getv "/pgp/baseurl"}}"
+KEY_SERVER="{{getv "/pgp/lookupurl"}}"
 
 # Ensure output dir exists
 OUTPUT_DIR="{{getv "/pgp/cachedir"}}"
@@ -12,19 +12,35 @@ chmod 0755 "$OUTPUT_DIR"
 # Create all files as global-readable
 umask 022
 
+# Read and sanitize
 read REMOTE_USER
+SAFE_REMOTE_USER=$(echo $REMOTE_USER | sed -ne '/^[a-z0-9][a-z0-9-]\{0,62\}$/p' | head -1)
+if [[ "$SAFE_REMOTE_USER" == "" ]]; then
+	echo $REMOTE_USER is not a valid DNS label
+	exit 1
+fi
+
 mkdir -p /tmp/keyrings
 TMP_FILE=$(mktemp -p /tmp/keyrings)
 GPG="gpg2 --no-default-keyring --keyring $TMP_FILE"
+
 # Get remote PGP keys and import
+KEY_URL=$(echo $KEY_SERVER | sed -e "s/<REMOTE_USER>/$REMOTE_USER/")
 PRIMARY_KEY_ID=$(
 # Get remote key
-curl -H 'Accept: application/pgp-keys' -sL $KEY_SERVER/$REMOTE_USER |
+curl -H 'Accept: application/pgp-keys' -sL $KEY_URL |
 # Import to temporary keyring
 $GPG --import 2>&1 |
-#
+# Extract key ID from output
 sed -ne '1s/^.*key \(.*\):.*$/\1/p'
 )
+if [[ "$PRIMARY_KEY_ID" = "" ]]; then
+	echo "Unable to import key from $KEY_URL" 1>&2
+	exit 1
+else
+	echo "Primary key $PRIMARY_KEY_ID imported"
+fi
+
 AUTH_KEYS=$(
 $GPG --with-colons --list-keys $PRIMARY_KEY_ID |
 # Get valid primary/sub keys
@@ -42,4 +58,5 @@ do
 	KEY=$(echo $AUTH_KEYS_LINE | awk '{print $2}')
 	DIGEST=$(echo -n $KEY | base64 -d | sha512sum | awk '{print $1}')
 	echo 'environment="REMOTE_USER='$REMOTE_USER'"' $AUTH_KEYS_LINE > $OUTPUT_DIR/$DIGEST
+	echo "Authentication key $KEY_ID imported"
 done

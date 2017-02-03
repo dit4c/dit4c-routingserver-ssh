@@ -1,9 +1,10 @@
 [template]
-src = "nginx.conf.tmpl"
+src = "register-login.tmpl"
 dest = "/dev/shm/bin/register-login"
 uid = 0
 gid = 0
 mode = "0755"
 keys = [
-  "/pgp/baseurl"
+  "/pgp/lookupurl",
+  "/pgp/cachedir"
 ]

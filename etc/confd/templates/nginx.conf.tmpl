@@ -52,7 +52,6 @@ http {
       location / {
         proxy_request_buffering off;
         proxy_buffering off;
-        proxy_pass_request_headers off;
         proxy_pass http://unix:/dev/shm/upstreams/$user;
         proxy_http_version 1.1;
         proxy_read_timeout 1d; # Allow websockets to idle

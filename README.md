@@ -8,13 +8,32 @@ Used with [dit4c-helper-listener-ssh](https://github.com/dit4c/dit4c-helper-list
 
 (It would also be trivial to rewrite `etc/confd/templates/register-login` to work with GitHub's SSH key API using `curl` + `jq`, as this was used during initial PoC testing.)
 
-### How it works
+## How it works
+
+### Starting the server
 
 The following environment variables must be set when running the ACI:
 
  * ROUTING_SCHEME - "http" or "https". Used for calculating end-user URL.
  * ROUTING_DOMAIN - base domain, where end-user subdomains are `<REMOTE_USER>.<ROUTING_DOMAIN>`
  * PGP_LOOKUPURL - URL template for looking up PGP keys, where `<REMOTE_USER>` is the identity provided during registration. eg. `https://dit4c.net/instances/<REMOTE_USER>/pgp-keys`
+
+Optionally, `TLS_KEY` and `TLS_CERT` can be provided to allow the ACI do expose HTTPS.
+
+eg. To run via HTTP using [rkt](https://github.com/coreos/rktgit ):
+
+```
+/usr/bin/rkt run \
+  --dns=8.8.8.8 \
+  --port http:80 \
+  --port ssh:2222 \
+  https://github.com/dit4c/dit4c-routingserver-ssh/releases/download/v0.1.2/dit4c-routingserver-ssh.linux.amd64.aci \
+  --set-env ROUTING_SCHEME=http \
+  --set-env ROUTING_DOMAIN=routing-domain.example \
+  --set-env PGP_LOOKUPURL='https://dit4c-server.example/instances/<REMOTE_USER>/pgp-keys'
+```
+
+### Client interaction
 
 To connect, the client performs an initial connection with the registration user:
 
